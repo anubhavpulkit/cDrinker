@@ -17,11 +17,26 @@ struct Texttitle: View {
     }
 }
 
+
 struct ContentView: View {
     
-    @State private var wakeUp = Date()
+    @State private var wakeUp = defaultWakeTime
     @State private var sleepAmount = 8.0
     @State private var coffeeAmount = 1.0
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+    @State private var showingAlert = false
+    
+    static var defaultWakeTime: Date {
+
+        var defaultWakeTime: Date {
+               var components = DateComponents()
+               components.hour = 7
+               components.minute = 0
+               return Calendar.current.date(from: components) ?? Date()
+        }
+    }
+    
     var body: some View {
 
     NavigationView {
@@ -46,7 +61,12 @@ struct ContentView: View {
                 }else{
                    Text("\(coffeeAmount, specifier: "%g") cups")
                 }
+                
             }.padding()
+                
+            .alert(isPresented: $showingAlert) {
+                Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+            }
       }
         .navigationBarTitle("cDrinker", displayMode: .inline)
         .navigationBarItems(trailing:
@@ -59,6 +79,29 @@ struct ContentView: View {
   }
     func calculateBedTime() {
         print("Button is pushed")
+       let model = cDrinker()
+        let components = Calendar.current.dateComponents([.hour, .minute], from: wakeUp)
+        let hour = (components.hour ?? 0) * 60 * 60
+        let minute = (components.minute ?? 0) * 60
+        
+        self.showingAlert = true
+        
+        do {
+            let prediction = try model.prediction(wake: Double(hour + minute), estimatedSleep: sleepAmount, coffee: Double(coffeeAmount))
+
+            let sleepTime = wakeUp - prediction
+            
+            let formatter = DateFormatter()
+            formatter.timeStyle = .short
+            
+            
+            alertTitle = "Your ideal bedtime is:"
+            alertMessage = formatter.string(from: sleepTime)
+            
+        } catch {
+            alertTitle = "Error"
+            alertMessage = "Sorry there was problem in calculating your bedtime"
+        }
     }
 }
 
