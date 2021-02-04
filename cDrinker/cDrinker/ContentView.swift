@@ -88,6 +88,8 @@ struct ContentView: View {
             //  prediction now contains how much sleep they actually need.
             
             let sleepTime = wakeUp - prediction.actualSleep
+            print(prediction.actualSleep)
+            print(sleepTime)
             
             let formatter = DateFormatter()
             formatter.timeStyle = .short
