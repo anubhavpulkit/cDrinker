@@ -17,7 +17,6 @@ struct Texttitle: View {
     }
 }
 
-
 struct ContentView: View {
     
     @State private var wakeUp = Date()
@@ -26,45 +25,65 @@ struct ContentView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showingAlert = false
+    @State private var sleeping = ""
     
     var body: some View {
         
         NavigationView {
-            Form{
-                VStack(alignment: .leading, spacing: 0){
-                    Texttitle(title: "When you want to wakeup?")
-                    
-                    DatePicker("Please enter time", selection: $wakeUp, displayedComponents: .hourAndMinute)
-                        .labelsHidden()
-                        .datePickerStyle(WheelDatePickerStyle())
-                    
-                    Texttitle(title: "How much you want to Sleep?")
-                    
-                    Stepper(value: $sleepAmount, in: 4...12.0, step: 0.25){
-                        
-                        Text("\(sleepAmount, specifier: "%g") Hours")
-                    }.padding()
-                    
-                    Texttitle(title: "How much Coffee you want to drink")
-                    
-                    Stepper(value: $coffeeAmount, in: 1...12, step: 1){
-                        if coffeeAmount == 1{
-                            Text("\(coffeeAmount, specifier: "%g") cup")
-                        }else{
-                            Text("\(coffeeAmount, specifier: "%g") cups")
+            VStack{
+                Form{
+                    VStack(alignment: .leading, spacing: 5){
+                        Section{
+                            Texttitle(title: "When you want to wakeup?")
+                            
+                            DatePicker("Please enter time", selection: $wakeUp, displayedComponents: .hourAndMinute)
+                                .labelsHidden()
+                                .datePickerStyle(WheelDatePickerStyle())
                         }
                         
-                    }.padding()
-                    .alert(isPresented: $showingAlert) {
-                        Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+                        Section{
+                            Texttitle(title: "How much you want to Sleep?")
+                            
+                            Stepper(value: $sleepAmount, in: 4...12.0, step: 0.25){
+                                
+                                Text("\(sleepAmount, specifier: "%g") Hours")
+                            }.padding()
+                        }
+                        
+                        Section{
+                            Texttitle(title: "How much Coffee you want to drink")
+                            
+                            Stepper(value: $coffeeAmount, in: 1...12, step: 1){
+                                if coffeeAmount == 1{
+                                    Text("\(coffeeAmount, specifier: "%g") cup")
+                                }else{
+                                    Text("\(coffeeAmount, specifier: "%g") cups")
+                                }
+                                
+                            }.padding()
+                        }
+                        .alert(isPresented: $showingAlert) {
+                            Alert(title: Text(alertTitle), message: Text(alertMessage), dismissButton: .default(Text("OK")))
+                            
+                        }
                     }
                 }
+                Button(action: calculateBedTime) {
+                    Text("Calculate").font(.headline).fontWeight(.bold)
+                        .frame(minWidth: 0, maxWidth: .infinity)
+                        .padding()
+                        .foregroundColor(.white)
+                        .background(LinearGradient(gradient: Gradient(colors: [.green, .yellow]), startPoint: .leading, endPoint: .trailing))
+                        .cornerRadius(40)
+                        .padding(.horizontal, 25)
+                    
+                }
+                Text("Sleep at: \(sleeping)")
+                    .font(.headline).bold().foregroundColor(.orange)
+                    .padding()
+                Spacer()
             }
             .navigationBarTitle("cDrinker", displayMode: .inline)
-            .navigationBarItems(trailing:
-                Button(action: calculateBedTime) {
-                    Text("Calculate")
-                })
         }
     }
     func calculateBedTime() {
@@ -88,14 +107,15 @@ struct ContentView: View {
             //  prediction now contains how much sleep they actually need.
             
             let sleepTime = wakeUp - prediction.actualSleep
-            print(prediction.actualSleep)
-            print(sleepTime)
+            
             
             let formatter = DateFormatter()
             formatter.timeStyle = .short
             
-            alertTitle = "Your ideal bedtime is:"
-            alertMessage = formatter.string(from: sleepTime)
+            sleeping = formatter.string(from: sleepTime)
+            
+            alertTitle = "Your Ideal Bedtime is:"
+            alertMessage = sleeping
             
         } catch {
             alertTitle = "Error"
