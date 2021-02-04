@@ -20,22 +20,22 @@ struct Texttitle: View {
 
 struct ContentView: View {
     
-    @State private var wakeUp = defaultWakeTime
+    @State private var wakeUp = Date()
     @State private var sleepAmount = 8.0
     @State private var coffeeAmount = 1.0
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var showingAlert = false
     
-    static var defaultWakeTime: Date {
-
-        var defaultWakeTime: Date {
-               var components = DateComponents()
-               components.hour = 7
-               components.minute = 0
-               return Calendar.current.date(from: components) ?? Date()
-        }
-    }
+//    static var defaultWakeTime: Date {
+//
+//        var defaultWakeTime: Date {
+//               var components = DateComponents()
+//               components.hour = 7
+//               components.minute = 0
+//               return Calendar.current.date(from: components) ?? Date()
+//        }
+//    }
     
     var body: some View {
 
@@ -55,7 +55,7 @@ struct ContentView: View {
             
             Texttitle(title: "How much Coffee you want to drink")
             
-            Stepper(value: $coffeeAmount, in: 1...8, step: 1){
+            Stepper(value: $coffeeAmount, in: 1...12, step: 1){
                 if coffeeAmount == 1{
                     Text("\(coffeeAmount, specifier: "%g") cup")
                 }else{
@@ -78,26 +78,31 @@ struct ContentView: View {
         }
   }
     func calculateBedTime() {
-        print("Button is pushed")
-       let model = cDrinker()
+
+        //connect model with swift
+        let model = SleepCalculator()
+        
+        // change the value of time into seconds
         let components = Calendar.current.dateComponents([.hour, .minute], from: wakeUp)
         let hour = (components.hour ?? 0) * 60 * 60
         let minute = (components.minute ?? 0) * 60
         
         self.showingAlert = true
-        
-        do {
-            let prediction = try model.prediction(wake: Double(hour + minute), estimatedSleep: sleepAmount, coffee: Double(coffeeAmount))
 
-            let sleepTime = wakeUp - prediction
-            
+        do {
+
+            // gives time in second for ideal sleep
+           let prediction = try model.prediction(wake: Double(hour + minute), estimatedSleep: sleepAmount, coffee: Double(coffeeAmount))
+
+            let sleepTime = wakeUp - prediction.actualSleep
             let formatter = DateFormatter()
             formatter.timeStyle = .short
             
             
             alertTitle = "Your ideal bedtime is:"
-            alertMessage = formatter.string(from: sleepTime)
             
+            alertMessage = formatter.string(from: sleepTime)
+
         } catch {
             alertTitle = "Error"
             alertMessage = "Sorry there was problem in calculating your bedtime"
