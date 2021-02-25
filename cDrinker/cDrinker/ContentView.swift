@@ -6,6 +6,7 @@
 //  Copyright © 2021 catalyst. All rights reserved.
 //
 
+import UserNotifications
 import SwiftUI
 
 struct Texttitle: View {
@@ -26,6 +27,8 @@ struct ContentView: View {
     @State private var alertMessage = ""
     @State private var showingAlert = false
     @State private var sleeping = ""
+    @State private var sleepingHour = 0
+    @State private var sleepingMinute = 0
     
     var body: some View {
         
@@ -68,7 +71,33 @@ struct ContentView: View {
                         }
                     }
                 }
-                Button(action: calculateBedTime) {
+                Button(action:{
+                    calculateBedTime()
+                    // Request permission
+                    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { success, error in
+                        if success {
+                            print("All set!")
+                        } else if let error = error {
+                            print(error.localizedDescription)
+                        }
+                    }
+                    
+                    // Schedule Notification
+                    let content = UNMutableNotificationContent()
+                    content.title = "Go to bed"
+                    content.subtitle = "You have to wake up at .So go to bed so you can complete your y number of hour sleep"
+                    content.sound = UNNotificationSound.default
+                    
+                    var date = DateComponents()
+                    date.hour = sleepingHour
+                    date.minute = 0
+                    let trigger = UNCalendarNotificationTrigger(dateMatching: date, repeats: false)
+                    
+                    let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
+                    
+                    UNUserNotificationCenter.current().add(request)
+                    
+                })  {
                     Text("Calculate").font(.headline).fontWeight(.bold)
                         .frame(minWidth: 0, maxWidth: .infinity)
                         .padding()
@@ -113,6 +142,12 @@ struct ContentView: View {
             formatter.timeStyle = .short
             
             sleeping = formatter.string(from: sleepTime)
+            
+            let index = sleeping.firstIndex(of: ":") ?? sleeping.endIndex
+            let beginnig = sleeping[..<index]
+            
+            sleepingHour = Int(beginnig)!
+            print(sleepingHour)
             
             alertTitle = "Your Ideal Bedtime is:"
             alertMessage = sleeping
